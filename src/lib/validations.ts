@@ -48,7 +48,7 @@ export const SubServiceSchema = z.object({
 })
 
 export const EmployeeSchema = z.object({
-    serviceId: z.coerce.number().optional(),
+    clinicServiceId: z.coerce.number().optional(),
     name: z.string({
         message: "Maydon bo'sh bo'lmasligi kerak!",
         required_error: "Maydon bo'sh bo'lmasligi kerak!"
@@ -83,3 +83,4 @@ export const WorkingHoursSchema = z.object({
     lunchStartTime: z.any().optional(),
     lunchEndTime: z.any().optional(),
 });
+

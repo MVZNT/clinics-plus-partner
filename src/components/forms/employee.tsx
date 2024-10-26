@@ -35,8 +35,8 @@ export function EmployeeForm({data, action}: ClinicFormProps) {
     const clinicServicesData: ClinicServiceType[] = getClinicServicesQuery?.data?.data?.services
 
     function onSubmit(values: z.infer<typeof EmployeeSchema>) {
-        if (!form.getValues("serviceId") && action === "CREATE") {
-            return customToast("ERROR", "service is missed!")
+        if (!form.getValues("clinicServiceId") && action === "CREATE") {
+            return customToast("ERROR", "clinic-service is missed!")
         }
 
         if (values.phone) {
@@ -49,8 +49,8 @@ export function EmployeeForm({data, action}: ClinicFormProps) {
         formData.append("surname", values.surname!)
         formData.append("phone", values.phone)
 
-        if (form.getValues("serviceId")) {
-            formData.append("serviceId", values.serviceId?.toString()!)
+        if (form.getValues("clinicServiceId")) {
+            formData.append("clinicServiceId", values.clinicServiceId?.toString()!)
         }
 
         if (action === "CREATE") {
@@ -83,7 +83,7 @@ export function EmployeeForm({data, action}: ClinicFormProps) {
                                 label: item?.service?.name
                             }
                         })}
-                        onChange={(item) => form.setValue("serviceId", item?.value!)}
+                        onChange={(item) => form.setValue("clinicServiceId", item?.value!)}
                         placeholder={"Choose service"}
                     />
                 </div>

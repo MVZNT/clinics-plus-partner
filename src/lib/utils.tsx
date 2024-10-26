@@ -71,3 +71,16 @@ export const localizedDay = (day: string) => {
         return findDay.label
     }
 }
+
+
+export const convertToISO = (date: string, timeRange: string) => {
+    const [startTime, endTime] = timeRange.split('-');
+
+    const startDateTime = new Date(`${date}T${startTime}:00`);
+    const endDateTime = new Date(`${date}T${endTime}:00`);
+
+    const isoStart = startDateTime.toISOString();
+    const isoEnd = endDateTime.toISOString();
+
+    return {isoStart, isoEnd};
+}

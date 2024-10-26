@@ -5,11 +5,11 @@ import {useGetPartnerInfoStore} from "../hooks/useZustand.ts";
 const notAllowedRoutes = [
     {
         subscription: "FREE",
-        routes: ["/services", "/employees"],
+        routes: ["/services", "/employees", "/bookings"],
     },
     {
         subscription: "START",
-        routes: ["-"],
+        routes: ["/bookings"],
     },
     {
         subscription: "FULL",

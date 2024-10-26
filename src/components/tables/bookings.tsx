@@ -24,7 +24,7 @@ const BookingsTable = ({data}: { data: BookingType[] }) => {
                     data?.map((booking) => (
                         <TableRow key={booking.id}>
                             <TableCell>#{booking.id}</TableCell>
-                            <TableCell>{booking?.employee?.name}</TableCell>
+                            <TableCell>{booking?.employee?.name} {booking?.employee?.surname}</TableCell>
                             <TableCell>{booking?.employee?.clinicService?.service?.name}</TableCell>
                             <TableCell>{booking?.subService?.name}</TableCell>
                             <TableCell>{booking?.user?.name} {booking?.user?.surname || ""}</TableCell>

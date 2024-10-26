@@ -1,6 +1,6 @@
 import {FaRegHospital} from "react-icons/fa6";
 import {HiOutlineChatBubbleOvalLeftEllipsis} from "react-icons/hi2";
-import {LuUsers2} from "react-icons/lu";
+import {LuClipboardList, LuUsers2} from "react-icons/lu";
 import {MdOutlineMedicalServices} from "react-icons/md";
 import {RiDiscountPercentLine} from "react-icons/ri";
 
@@ -20,18 +20,19 @@ export const sidebarItems = [
         subscription: ["START", "FULL"],
         icon: <MdOutlineMedicalServices className={"-ml-[1px]"}/>
     },
-    // {
-    //     id: 2,
-    //     label: "Bookings",
-    //     href: "/bookings",
-    //     icon: <BookingIcon/>,
-    // },
     {
         id: 3,
-        label: "Employees",
+        label: "Doctors",
         href: "/employees",
         subscription: ["START", "FULL"],
         icon: <LuUsers2/>,
+    },
+    {
+        id: 2,
+        label: "Bookings",
+        href: "/bookings",
+        icon: <LuClipboardList/>,
+        subscription: ["FULL"],
     },
     {
         id: 5,

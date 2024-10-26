@@ -1,161 +1,207 @@
-import {Button} from "../ui/button.tsx";
+import {BookingType} from "../../types/boooking";
+import {useEffect, useState} from "react";
 import {SingleEmployeeType} from "../../types/employee";
-import React, {useEffect, useState} from "react";
-import {useGetEmployees} from "../../hooks/useEmployee.ts";
-import Select from "react-select";
-import {customToast} from "../../lib/utils.tsx";
+import {ClinicServiceType, SubServiceType} from "../../types/service";
+import {useGetServices} from "../../hooks/useServices.ts";
 import {useGetSubServices} from "../../hooks/useSubServices.ts";
-import {SubServiceType} from "../../types/service";
+import {useGetEmployeesByClinicService} from "../../hooks/useEmployee.ts";
+import {customToast} from "../../lib/utils.tsx";
 import {useGetUsers} from "../../hooks/useUsers.ts";
 import {SingleUserType} from "../../types/user";
+import Select from "react-select";
 import {Input, MaskInput} from "../ui/input.tsx";
-import {BookingType} from "../../types/boooking";
+import {Button} from "../ui/button.tsx";
+import {useGetFreeSlots} from "../../hooks/useBookings.ts";
 
 export function BookingForm({action}: { action: "CREATE" | "EDIT", data?: BookingType }) {
-    const [clinicServiceId, setClinicServiceId] = useState<number>(0);
+    const [clinicServiceId, setClinicServiceId] = useState<number>();
+    const [fetchSubServicesEnabled, setFetchSubServicesEnabled] = useState<boolean>(false);
+    const [employeeId, setEmployeeId] = useState<number>();
+    const [subServiceId, setSubServiceId] = useState<number>();
 
-    const [isFetchingSubServiceEnabled, setIsFetchingSubServiceEnabled] = useState<boolean>(false);
-    const [isFetchingUsersEnabled, setIsFetchingUsersEnabled] = useState<boolean>(false);
+    const [bookingDate, setBookingDate] = useState<any>(new Date());
 
-    const [step, setStep] = useState<number>(1);
-    const [employee, setEmployee] = useState<SingleEmployeeType>()
-    const [userId, setUserId] = useState<number>()
+    const [comment, setComment] = useState<string>();
+    const [bookingUserType, setBookingUserType] = useState<"CREATE" | "IGNORE">("IGNORE");
+    const [userName, setUserName] = useState<string>();
+    const [userSurname, setUserSurname] = useState<string>();
+    const [userPhone, setUserPhone] = useState<string>();
 
-    const [addingUserType, setAddingUserType] = useState<"SEARCH" | "ADD">("SEARCH")
+    const [existedUser, setExistedUser] = useState<SingleUserType>();
 
-    const getEmployeesQuery = useGetEmployees(1, 300)
-    const employeesData: SingleEmployeeType[] = getEmployeesQuery?.data?.data?.employees
+    const getClinicServicesQuery = useGetServices()
+    const clinicServicesData: ClinicServiceType[] = getClinicServicesQuery.data?.data?.services
 
-    const getSubServicesQuery = useGetSubServices(+clinicServiceId, "", isFetchingSubServiceEnabled);
-    const subServicesData: SubServiceType[] = getSubServicesQuery.data?.data?.clinicSubServices
+    const getSubServicesQuery = useGetSubServices(clinicServiceId!, "", fetchSubServicesEnabled)
+    const subServicesData: SubServiceType[] = getSubServicesQuery?.data?.data?.clinicSubServices
 
-    const getUsersQuery = useGetUsers(isFetchingUsersEnabled)
-    const usersData: SingleUserType[] = getUsersQuery?.data?.data?.users
+    const getEmployeesQuery = useGetEmployeesByClinicService(clinicServiceId!, fetchSubServicesEnabled)
+    const employeesData: SingleEmployeeType[] = getEmployeesQuery.data?.data?.employees
 
-    function onSubmit(e: any) {
+    const getUsersQuery = useGetUsers(bookingUserType === "IGNORE")
+    const usersData = getUsersQuery?.data?.data?.users
+
+    const getFreeSlotsQuery = useGetFreeSlots(employeeId!, subServiceId!, bookingDate, !!(employeeId && subServiceId && bookingDate))
+    const slotsData: { time: string }[] = getFreeSlotsQuery?.data?.data?.bookingSlots
+
+    const onSubmit = (e: any) => {
         e.preventDefault();
 
-        if (!employee) {
-            return customToast("ERROR", "Please choose employee!")
+        if (bookingUserType === "CREATE") {
+            if (!userName) {
+                return customToast("ERROR", "User name is required!")
+            }
+
+            if (!userPhone) {
+                return customToast("ERROR", "User phone is required!")
+            }
         }
+
+        if (bookingUserType === "IGNORE") {
+            if (!existedUser) {
+                return customToast("ERROR", "Please select user!")
+            }
+        }
+
+        if (!bookingDate) {
+            return customToast("ERROR", "Please choose booking date!")
+        }
+
+        if (!employeeId) {
+            return customToast("ERROR", "Employee is required!")
+        }
+
+        if (!subServiceId) {
+            return customToast("ERROR", "SubService is required!")
+        }
+
+        const payload = {
+            userId: existedUser?.id,
+            employeeId,
+            bookingTimeStart: 1,
+            bookingTimeEnd: 1,
+            bookingUserType,
+            name: userName || undefined,
+            surname: userSurname || undefined,
+            phone: userPhone || undefined,
+        }
+
+        console.log(payload)
     }
 
     useEffect(() => {
-        getSubServicesQuery.refetch()
-    }, [employee])
+        if (fetchSubServicesEnabled) {
+            getSubServicesQuery.refetch()
+            getEmployeesQuery.refetch()
+        }
+    }, [clinicServiceId]);
+
+    useEffect(() => {
+        getFreeSlotsQuery.refetch()
+    }, [bookingDate]);
 
     return (
-        <form onSubmit={onSubmit} className="space-y-4">
-            <h1 className={"text-xl font-medium"}>
-                {action === "CREATE" ? "Create Booking" : "Edit booking"}
-            </h1>
+        <form onSubmit={onSubmit} className={"flex flex-col gap-4"}>
+            <h1 className={"text-xl font-medium"}>{action === "CREATE" ? "Create Booking" : "Update booking"}</h1>
 
-            <div className={"flex flex-col gap-2 text-sm"}>
-                <h1 className={"font-medium"}>Employee</h1>
-
-                <Select
-                    className={"text-sm"}
-                    options={employeesData?.map(item => {
-                        return {
-                            value: item.id,
-                            label: `${item?.name} ${item?.surname} (${item?.phone})`,
-                        }
-                    })}
-                    onChange={(item) => {
-                        const findEmployee = employeesData?.find(employee => employee.id === item?.value!)
-                        if (findEmployee) {
-                            setEmployee(findEmployee)
-                            setClinicServiceId(findEmployee?.serviceId)
-                            setIsFetchingSubServiceEnabled(true)
-                            setStep((prevState) => prevState + 1)
-                        }
-                    }}
-                    placeholder={"Choose employee"}
-                />
-            </div>
-
-            {
-                step > 1 && action === "CREATE" && <div className={"flex flex-col gap-2 text-sm"}>
-                    <h1 className={"font-medium"}>Sub-service</h1>
-
+            <div className={"grid grid-cols-3 gap-4 text-sm"}>
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Service:</span>
                     <Select
-                        className={"text-sm"}
-                        options={subServicesData?.map(item => {
+                        options={clinicServicesData?.map(item => {
                             return {
                                 value: item.id,
-                                label: item.name,
+                                label: item?.service?.name
                             }
                         })}
                         onChange={(item) => {
                             setClinicServiceId(item?.value!)
-                            setStep((prevState) => prevState + 1)
-                            setIsFetchingUsersEnabled(true)
+                            setFetchSubServicesEnabled(true)
+                        }}
+                        placeholder={"Choose service"}
+                    />
+                </div>
+
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Sub-service:</span>
+
+                    <Select
+                        options={subServicesData?.map(item => {
+                            return {
+                                value: item.id,
+                                label: item?.name
+                            }
+                        })}
+                        onChange={(item) => setSubServiceId(item?.value!)}
+                        placeholder={"Choose sub-service"}
+                    />
+                </div>
+
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Employee:</span>
+                    <Select
+                        options={employeesData?.map(item => {
+                            return {
+                                value: item.id,
+                                label: `${item?.name} ${item?.surname}`,
+                            }
+                        })}
+                        onChange={(item) => {
+                            setEmployeeId(item?.value!)
+                            setFetchSubServicesEnabled(true)
                         }}
                         placeholder={"Choose employee"}
                     />
                 </div>
-            }
 
-            {
-                step > 2 && action === "CREATE" &&
-                <div className={"flex flex-col gap-2"}>
-                    <h1 className={"font-medium text-sm"}>User</h1>
-                    <div className={"flex flex-col gap-2"}>
-                        <div className={"grid grid-cols-2 gap-2 rounded w-full text-sm"}>
-                            <div
-                                className={`flex justify-center items-center rounded cursor-pointer p-2 ${addingUserType === "SEARCH" ? "border-2 border-primary " : "bg-white  border border-black/40"}`}
-                                onClick={() => {
-                                    setAddingUserType("SEARCH")
-                                }}
-                            >
-                                Search
-                            </div>
-
-                            <div
-                                className={`flex justify-center items-center rounded cursor-pointer p-2 ${addingUserType === "ADD" ? "border-2 border-primary" : "bg-white border border-black/40"}`}
-                                onClick={() => {
-                                    setStep((prevState) => prevState + 1)
-                                    setAddingUserType("ADD")
-                                }}
-                            >
-                                Create
-                            </div>
-                        </div>
-
-                        {
-                            addingUserType === "SEARCH"
-                                ? <Select
-                                    className={"text-sm w-full"}
-                                    options={usersData?.map(item => {
-                                        return {
-                                            value: item.id,
-                                            label: item.name,
-                                        }
-                                    })}
-                                    onChange={(item) => {
-                                        setStep((prevState) => prevState + 1)
-                                        setUserId(item?.value!)
-                                    }}
-                                    placeholder={"Choose user"}
-                                /> :
-
-                                <div className={"flex flex-col gap-2 w-full text-sm"}>
-                                    <Input placeholder={"Name"}/>
-                                    <Input placeholder={"Surname"}/>
-                                    <MaskInput placeholder={"+998"}/>
-                                </div>
-                        }
-                    </div>
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Booking Date:</span>
+                    <Input
+                        type={"date"}
+                        onChange={(e) => setBookingDate(new Date(e.target.value).toISOString())}
+                    />
                 </div>
-            }
 
-            {
-                step > 3 && action === "CREATE" && <Button
-                    type="submit"
-                >
-                    Create
-                </Button>
-            }
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Free slots:</span>
+                    <Select
+                        options={slotsData?.map(item => {
+                            return {
+                                value: item.time,
+                                label: item.time,
+                            }
+                        })}
+                        onChange={(item) => {
+                            setBookingDate(item?.value!)
+                        }}
+                        placeholder={"Choose free slot"}
+                    />
+                </div>
+
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Booking User Type:</span>
+                    <Select/>
+                </div>
+
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Name:</span>
+                    <Input placeholder={"enter name"}/>
+                </div>
+
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Surname:</span>
+                    <Input placeholder={"enter surname"}/>
+                </div>
+
+                <div className={"flex flex-col gap-1"}>
+                    <span className={"font-medium"}>Phone:</span>
+                    <MaskInput placeholder={"+998"}/>
+                </div>
+
+                <div className={"flex items-end"}>
+                    <Button className={"w-full"}>Create</Button>
+                </div>
+            </div>
         </form>
     )
 }

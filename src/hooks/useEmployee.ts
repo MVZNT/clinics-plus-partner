@@ -23,6 +23,17 @@ export const useGetEmployees = (page: number = 1, limit: number = 20, keyword: s
     })
 }
 
+export const useGetEmployeesByClinicService = (clinicServiceId: number, enabled: boolean) => {
+    return useQuery({
+        queryKey: [queryKeys.GET_EMPLOYEES_BY_SUB_SERVICES],
+        queryFn: async () => {
+            return await api.get(`/employee/clinic-service/${clinicServiceId}`)
+        },
+        enabled
+    })
+}
+
+
 export const useCreateEmployee = () => {
     const createEmployeeModal = useCreateEmployeeModal();
 

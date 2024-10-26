@@ -27,6 +27,7 @@ export enum queryKeys {
     // employee
     CREATE_EMPLOYEE,
     GET_EMPLOYEES,
+    GET_EMPLOYEES_BY_SUB_SERVICES,
     UPDATE_EMPLOYEE,
     DELETE_EMPLOYEE,
 

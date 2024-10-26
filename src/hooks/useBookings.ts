@@ -25,6 +25,22 @@ export const useGetBookings = (date: Date, keyword: string = "", page = 1, limit
     })
 }
 
+export const useGetFreeSlots = (employeeId: number, subServiceId: number, date: Date, enabled: boolean) => {
+    return useQuery({
+        queryKey: [queryKeys.GET_BOOKINGS],
+        queryFn: async () => {
+            return await api.get("/booking/free-slots", {
+                params: {
+                    date,
+                    employeeId,
+                    subServiceId
+                }
+            })
+        },
+        enabled
+    })
+}
+
 export const useCreateBooking = () => {
     const createBookingModal = useCreateBookingModal();
 

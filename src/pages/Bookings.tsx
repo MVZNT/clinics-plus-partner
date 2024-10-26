@@ -56,7 +56,11 @@ const Bookings = () => {
 
     return (
         <>
-            <DialogModal isOpen={createBookingModal.isOpen} onClose={createBookingModal.onClose}>
+            <DialogModal
+                isOpen={createBookingModal.isOpen}
+                onClose={createBookingModal.onClose}
+                className={"w-[1000px]"}
+            >
                 <BookingForm action={"CREATE"}/>
             </DialogModal>
 
